@@ -3,30 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aviation Oxygen & Acclimatization Calculator</title>
+  <title>Aviation Oxygen Calculator</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
-      --bg: #0f172a;
-      --card: #1e293b;
-      --border: #334155;
-      --primary: #38bdf8;
-      --accent: #10b981;
-      --text: #f8fafc;
-      --muted: #94a3b8;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --border: #e2e8f0;
+      --primary: #0284c7;
+      --primary-hover: #0369a1;
+      --accent: #059669;
+      --danger: #e11d48;
+      --text: #0f172a;
+      --muted: #64748b;
     }
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: var(--bg);
       color: var(--text);
       margin: 0;
-      padding: 2rem 1rem;
+      padding: 2.5rem 1rem;
       display: flex;
       justify-content: center;
     }
     .container {
       width: 100%;
-      max-width: 960px;
+      max-width: 1100px;
       display: flex;
       flex-direction: column;
       gap: 1.5rem;
@@ -36,59 +38,191 @@
       border: 1px solid var(--border);
       border-radius: 0.75rem;
       padding: 1.5rem;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
     }
     h1 {
-      margin: 0 0 0.5rem 0;
+      margin: 0 0 0.4rem 0;
       font-size: 1.75rem;
+      color: var(--text);
     }
     p {
       margin: 0;
       color: var(--muted);
-      line-height: 1.5;
+      font-size: 0.95rem;
     }
-    .grid {
+
+    /* Top Parameters Row */
+    .param-row {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 1rem;
       margin-top: 1.25rem;
     }
     label {
-      display: block;
-      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.825rem;
       color: var(--muted);
-      margin-bottom: 0.35rem;
+      margin-bottom: 0.4rem;
       font-weight: 500;
+      white-space: nowrap;
     }
     input, select {
       width: 100%;
       box-sizing: border-box;
-      background: #0f172a;
+      background: #ffffff;
       border: 1px solid var(--border);
       color: var(--text);
       padding: 0.6rem 0.75rem;
       border-radius: 0.375rem;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
     input:focus, select:focus {
       outline: none;
       border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12);
     }
-    .callout {
-      margin-top: 1rem;
-      padding: 0.85rem 1rem;
-      background: rgba(16, 185, 129, 0.1);
-      border: 1px solid rgba(16, 185, 129, 0.3);
+
+    /* Tooltip */
+    .tooltip-container {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      cursor: help;
+    }
+    .tooltip-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 15px;
+      height: 15px;
+      background: #e2e8f0;
+      color: var(--muted);
+      border-radius: 50%;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+    .tooltip-text {
+      visibility: hidden;
+      width: 260px;
+      background-color: #1e293b;
+      color: #ffffff;
+      text-align: left;
+      border-radius: 0.375rem;
+      padding: 0.5rem 0.65rem;
+      position: absolute;
+      z-index: 10;
+      bottom: 130%;
+      left: 50%;
+      transform: translateX(-50%);
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      font-size: 0.75rem;
+      line-height: 1.35;
+      font-weight: 400;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      white-space: normal;
+    }
+    .tooltip-text::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      margin-left: -5px;
+      border-width: 5px;
+      border-style: solid;
+      border-color: #1e293b transparent transparent transparent;
+    }
+    .tooltip-container:hover .tooltip-text {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    /* Drag and Drop Zone */
+    .dropzone {
+      margin-top: 1.25rem;
+      border: 2px dashed var(--border);
       border-radius: 0.5rem;
-      font-size: 0.9rem;
-      color: #6ee7b7;
+      padding: 2.5rem 1rem;
+      text-align: center;
+      background: #f8fafc;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
     }
+    .dropzone:hover, .dropzone.dragover {
+      border-color: var(--primary);
+      background: #f0f9ff;
+    }
+    .dropzone-icon {
+      font-size: 2rem;
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+    }
+    .dropzone-text {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .dropzone-subtext {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 0.25rem;
+    }
+    .dropzone input[type="file"] {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    /* Standalone Acclimatization Section */
+    .acclim-section {
+      margin-top: 1.25rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--border);
+    }
+    .acclim-header {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.75rem;
+    }
+    .acclim-grid {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 1.25rem;
+      align-items: center;
+    }
+    @media (max-width: 700px) {
+      .acclim-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .acclim-output {
+      padding: 0.75rem 1rem;
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      color: #065f46;
+      line-height: 1.45;
+    }
+
+    /* Results section */
     .stats {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
       gap: 1rem;
+      margin-bottom: 1.25rem;
     }
     .stat-box {
-      background: rgba(15, 23, 42, 0.6);
+      background: #f8fafc;
       border: 1px solid var(--border);
       border-radius: 0.5rem;
       padding: 1rem;
@@ -105,35 +239,77 @@
       margin-top: 0.25rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
+      font-weight: 600;
+    }
+    .header-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1.25rem;
+    }
+    .header-title-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+    .chart-title {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .chart-subtitle {
+      font-size: 0.85rem;
+      color: var(--muted);
+      font-weight: 400;
+    }
+    }
+    .btn-export {
+      background: var(--primary);
+      color: #ffffff;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      width: auto;
+      padding: 0.55rem 1.1rem;
+      border-radius: 0.375rem;
+      font-size: 0.875rem;
+      transition: background-color 0.15s ease;
+    }
+    .btn-export:hover {
+      background: var(--primary-hover);
     }
     .chart-container {
       position: relative;
       height: 380px;
-      margin-top: 1.25rem;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="card">
-      <h1>Pilot Oxygen & Acclimatization Calculator</h1>
-      <p>Upload an IGC flight log to compute minute-by-minute oxygen requirements adjusted for pilot acclimatization elevation.</p>
+      <h1>Pilot Oxygen Calculator</h1>
+      <p>Configure parameters, drop your flight log, and view minute-by-minute oxygen consumption.</p>
 
-      <div class="grid">
+      <!-- Row 1: Inputs -->
+      <div class="param-row">
         <div>
-          <label for="igcFile">IGC Flight File</label>
-          <input type="file" id="igcFile" accept=".igc,.IGC">
-        </div>
-        <div>
-          <label for="homeAlt">Home / Acclimatization Alt (ft)</label>
-          <input type="number" id="homeAlt" value="5280" step="500" min="0">
-        </div>
-        <div>
-          <label for="targetAlt">Base Equivalent Alt (ft)</label>
+          <label for="targetAlt">
+            Target Altitude (ft)
+            <span class="tooltip-container">
+              <span class="tooltip-icon">?</span>
+              <span class="tooltip-text">Enter the targeted altitude and the script will calculate the required oxygen flow rate to reach the equivalent oxygenation at that altitude.</span>
+            </span>
+          </label>
           <input type="number" id="targetAlt" value="12000" step="500">
         </div>
         <div>
-          <label for="minuteVolume">Minute Volume (LPM)</label>
+          <label for="minuteVolume">
+            Breathing Volume (LPM)
+            <span class="tooltip-container">
+              <span class="tooltip-icon">?</span>
+              <span class="tooltip-text">Total volume of air exchanged by breathing per minute. Average adult male rates are 6 LPM at rest and 15 LPM for light activity.</span>
+            </span>
+          </label>
           <input type="number" id="minuteVolume" value="15.0" step="0.5">
         </div>
         <div>
@@ -145,24 +321,51 @@
         </div>
       </div>
 
-      <div class="callout" id="acclimatizationBanner">
-        Calculating physiological threshold...
+      <!-- Row 2: Drag and Drop Box -->
+      <div class="dropzone" id="dropzone">
+        <input type="file" id="igcFile" accept=".igc,.IGC">
+        <div class="dropzone-icon">📄</div>
+        <div class="dropzone-text" id="dropzoneLabel">Choose an IGC file or drag it here</div>
+        <div class="dropzone-subtext">Supports standard .IGC flight logs</div>
+      </div>
+
+      <!-- Row 3: Standalone Acclimatization Reference Tool -->
+      <div class="acclim-section">
+        <div class="acclim-header">Acclimatization Equivalency Reference</div>
+        <div class="acclim-grid">
+          <div>
+            <label for="homeAlt">Home / Acclimatization Alt (ft)</label>
+            <input type="number" id="homeAlt" value="5280" step="500" min="0">
+          </div>
+          <div class="acclim-output" id="acclimOutput">
+            Loading reference threshold...
+          </div>
+        </div>
       </div>
     </div>
 
+    <!-- Results Section -->
     <div class="card" id="resultsSection" style="display: none;">
+      <div class="header-actions">
+        <div class="header-title-group">
+          <div class="chart-title">Flight Profile & Oxygen Delivery</div>
+          <div class="chart-subtitle">Assumes idealized and perfect oxygen delivery</div>
+        </div>
+        <button class="btn-export" id="exportBtn">Export Minute Data (CSV)</button>
+      </div>
+
       <div class="stats">
         <div class="stat-box">
           <div class="stat-value" id="maxAlt">0 ft</div>
-          <div class="stat-label">Max Altitude</div>
+          <div class="stat-label">Peak Altitude</div>
         </div>
         <div class="stat-box">
           <div class="stat-value" id="duration">0 min</div>
           <div class="stat-label">Flight Duration</div>
         </div>
         <div class="stat-box">
-          <div class="stat-value" id="effectiveTarget">0 ft</div>
-          <div class="stat-label">Acclimatized Ceiling</div>
+          <div class="stat-value" id="targetDisplay">0 ft</div>
+          <div class="stat-label">Target Ceiling</div>
         </div>
         <div class="stat-box">
           <div class="stat-value" id="totalO2">0 L</div>
@@ -183,50 +386,57 @@
   <script>
     let flightChart = null;
     let cachedAltitudes = [];
+    let cachedFlowRates = [];
 
-    // ISA Standard Atmosphere Model: Altitude (ft) -> Pressure (mmHg)
+    // Empirical lookup table based on Rahn & Otis / USARIEM altitude data
+    // [Home Living Altitude (ft), Equivalent Flight Altitude for 12,000 ft Sea-Level Hypoxia]
+    const ACCLIMATIZATION_TABLE = [
+      [0, 12000],
+      [2500, 13200],
+      [5280, 15200],
+      [7500, 16500],
+      [10000, 17600],
+      [14000, 19000]
+    ];
+
+    function getAcclimatized12kEquivalent(homeAltFt) {
+      const lastIdx = ACCLIMATIZATION_TABLE.length - 1;
+      if (homeAltFt <= ACCLIMATIZATION_TABLE[0][0]) return ACCLIMATIZATION_TABLE[0][1];
+      if (homeAltFt >= ACCLIMATIZATION_TABLE[lastIdx][0]) return ACCLIMATIZATION_TABLE[lastIdx][1];
+
+      for (let i = 0; i < lastIdx; i++) {
+        const [x0, y0] = ACCLIMATIZATION_TABLE[i];
+        const [x1, y1] = ACCLIMATIZATION_TABLE[i + 1];
+        if (homeAltFt >= x0 && homeAltFt <= x1) {
+          const fraction = (homeAltFt - x0) / (x1 - x0);
+          return Math.round(y0 + fraction * (y1 - y0));
+        }
+      }
+      return 12000;
+    }
+
+    function updateAcclimatizationReference() {
+      const homeAlt = parseFloat(document.getElementById('homeAlt').value) || 0;
+      const equivAlt = getAcclimatized12kEquivalent(homeAlt);
+      const advantage = equivAlt - 12000;
+
+      const outputBox = document.getElementById('acclimOutput');
+      outputBox.innerHTML = `A pilot living at <strong>${homeAlt.toLocaleString()} ft</strong> experiences the physiological equivalent of sea-level 12,000 ft hypoxia onset at <strong>${equivAlt.toLocaleString()} ft</strong> (+${advantage.toLocaleString()} ft tolerance). You can update your <strong>Target Altitude</strong> above if desired.`;
+    }
+
+    // ISA Standard Atmosphere Model
     function getPressureMmHg(altitudeFt) {
       const hMeters = altitudeFt * 0.3048;
       const P0 = 760.0;
       return P0 * Math.pow(1 - 2.25577e-5 * hMeters, 5.25588);
     }
 
-    // Inverse Barometric Model: Pressure (mmHg) -> Altitude (ft)
-    function getAltitudeFt(pressureMmHg) {
-      const P0 = 760.0;
-      const hMeters = (1 - Math.pow(pressureMmHg / P0, 1 / 5.25588)) / 2.25577e-5;
-      return hMeters / 0.3048;
-    }
-
-    // Physiological Acclimatization Model (Alveolar Gas Equation)
-    function calculateAcclimatizedThreshold(homeAltFt, baseThresholdFt) {
-      const FIO2 = 0.2095;
-      const PH2O = 47.0; // Water vapor pressure in lungs (mmHg)
-      const R = 0.8;     // Respiratory quotient
-
-      // 1. Critical alveolar PO2 of an unacclimatized sea-level pilot at the base threshold
-      const pAmbBase = getPressureMmHg(baseThresholdFt);
-      const acuteBasePACO2 = 35.0; // Mild hyperventilation at threshold
-      const criticalPAO2 = FIO2 * (pAmbBase - PH2O) - (acuteBasePACO2 / R);
-
-      // 2. Resting PACO2 shifts down ~1.25 mmHg per 1,000 ft of home elevation
-      const homeKft = Math.max(0, homeAltFt / 1000.0);
-      const restingPACO2 = Math.max(24.0, 40.0 - 1.25 * homeKft);
-      const acuteFlightPACO2 = restingPACO2 - 5.0; // Additional hyperventilation in flight
-
-      // 3. Solve for required ambient pressure to match the same critical PAO2
-      const requiredPAmb = ((criticalPAO2 + (acuteFlightPACO2 / R)) / FIO2) + PH2O;
-      const effectiveAlt = getAltitudeFt(requiredPAmb);
-
-      return Math.round(effectiveAlt);
-    }
-
-    // Oxygen flow rate mixing equation
-    function calculateOxygenFlow(actualAltFt, effectiveTargetFt, minuteVolumeLpm) {
-      if (effectiveTargetFt >= actualAltFt) return 0.0;
+    // Oxygen flow rate calculation
+    function calculateOxygenFlow(actualAltFt, targetAltFt, minuteVolumeLpm) {
+      if (targetAltFt >= actualAltFt) return 0.0;
 
       const pActual = getPressureMmHg(actualAltFt);
-      const pTarget = getPressureMmHg(effectiveTargetFt);
+      const pTarget = getPressureMmHg(targetAltFt);
       const ambientO2 = 0.21;
       const requiredFiO2 = ambientO2 * (pTarget / pActual);
 
@@ -235,8 +445,8 @@
       const flow = minuteVolumeLpm * (requiredFiO2 - ambientO2) / (1.0 - ambientO2);
       return Math.max(0, Math.round(flow * 100) / 100);
     }
-
-    // Parse B-records from raw IGC text
+	
+	// Parse B-records from raw IGC text
     function parseIgcAltitudes(text, altSource) {
       const lines = text.split('\n');
       const startIdx = altSource === 'pressure' ? 25 : 30;
@@ -261,13 +471,17 @@
 
       if (fixes.length === 0) return [];
 
-      // Handle midnight UTC rollover
+      // CORRECTED: Handle midnight UTC rollover using raw timestamps
       let dayOffset = 0;
-      let prevT = fixes[0].t;
+      let prevRawT = fixes[0].t;
       for (let fix of fixes) {
-        if (fix.t < prevT - 43200) dayOffset += 86400;
-        fix.t += dayOffset;
-        prevT = fix.t;
+        const rawT = fix.t;
+        // A drop of > 12 hours (43,200 s) indicates midnight rollover
+        if (rawT < prevRawT - 43200) {
+          dayOffset += 86400;
+        }
+        fix.t = rawT + dayOffset;
+        prevRawT = rawT;
       }
 
       // Group fixes into clock minute bins
@@ -284,41 +498,35 @@
         return Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10;
       });
     }
+	
+    
 
     function updateCalculations() {
-      const homeAlt = parseFloat(document.getElementById('homeAlt').value) || 0;
-      const baseTargetAlt = parseFloat(document.getElementById('targetAlt').value) || 12000;
-      const minuteVolume = parseFloat(document.getElementById('minuteVolume').value) || 15.0;
-
-      // Calculate acclimatized equivalent altitude
-      const acclimatizedThreshold = calculateAcclimatizedThreshold(homeAlt, baseTargetAlt);
-      const advantage = acclimatizedThreshold - baseTargetAlt;
-
-      const banner = document.getElementById('acclimatizationBanner');
-      banner.innerHTML = `<strong>Acclimatization Advantage:</strong> A pilot living at <strong>${homeAlt.toLocaleString()} ft</strong> experiences the physiological equivalent of sea-level ${baseTargetAlt.toLocaleString()} ft at <strong>${acclimatizedThreshold.toLocaleString()} ft</strong> (+${advantage.toLocaleString()} ft tolerance).`;
-
       if (cachedAltitudes.length === 0) return;
 
-      const flowRates = cachedAltitudes.map(alt => calculateOxygenFlow(alt, acclimatizedThreshold, minuteVolume));
+      const targetAlt = parseFloat(document.getElementById('targetAlt').value) || 0;
+      const minuteVolume = parseFloat(document.getElementById('minuteVolume').value) || 15.0;
 
-      const totalLiters = flowRates.reduce((a, b) => a + b, 0);
-      const activeFlows = flowRates.filter(f => f > 0);
+      cachedFlowRates = cachedAltitudes.map(alt => calculateOxygenFlow(alt, targetAlt, minuteVolume));
+
+      const totalLiters = cachedFlowRates.reduce((a, b) => a + b, 0);
+      const activeFlows = cachedFlowRates.filter(f => f > 0);
       const avgActiveFlow = activeFlows.length > 0 ? (totalLiters / activeFlows.length) : 0;
       const peakAltitude = Math.max(...cachedAltitudes);
 
       document.getElementById('maxAlt').textContent = `${Math.round(peakAltitude).toLocaleString()} ft`;
       document.getElementById('duration').textContent = `${cachedAltitudes.length} min`;
-      document.getElementById('effectiveTarget').textContent = `${acclimatizedThreshold.toLocaleString()} ft`;
+      document.getElementById('targetDisplay').textContent = `${targetAlt.toLocaleString()} ft`;
       document.getElementById('totalO2').textContent = `${Math.round(totalLiters)} L`;
       document.getElementById('avgFlow').textContent = `${avgActiveFlow.toFixed(2)} LPM`;
       document.getElementById('resultsSection').style.display = 'block';
 
-      renderChart(cachedAltitudes, flowRates, acclimatizedThreshold);
+      renderChart(cachedAltitudes, cachedFlowRates, targetAlt);
     }
 
-    function renderChart(altitudes, flowRates, targetThreshold) {
+    function renderChart(altitudes, flowRates, targetAltitude) {
       const labels = altitudes.map((_, i) => `${i + 1}`);
-      const thresholdLine = altitudes.map(() => targetThreshold);
+      const thresholdLine = altitudes.map(() => targetAltitude);
       const ctx = document.getElementById('flightChart').getContext('2d');
 
       if (flightChart) flightChart.destroy();
@@ -331,16 +539,16 @@
             {
               label: 'Altitude (ft)',
               data: altitudes,
-              borderColor: '#38bdf8',
-              backgroundColor: 'rgba(56, 189, 248, 0.1)',
+              borderColor: '#0284c7',
+              backgroundColor: 'rgba(2, 132, 199, 0.08)',
               yAxisID: 'yAlt',
               pointRadius: 0,
               tension: 0.2
             },
             {
-              label: 'Acclimatized Threshold (ft)',
+              label: 'Target Altitude (ft)',
               data: thresholdLine,
-              borderColor: '#10b981',
+              borderColor: '#059669',
               borderDash: [6, 4],
               pointRadius: 0,
               yAxisID: 'yAlt',
@@ -349,8 +557,8 @@
             {
               label: 'O2 Flow (LPM)',
               data: flowRates,
-              borderColor: '#f43f5e',
-              backgroundColor: 'rgba(244, 63, 94, 0.15)',
+              borderColor: '#e11d48',
+              backgroundColor: 'rgba(225, 29, 72, 0.1)',
               yAxisID: 'yFlow',
               fill: true,
               pointRadius: 0,
@@ -364,37 +572,62 @@
           interaction: { mode: 'index', intersect: false },
           scales: {
             x: {
-              title: { display: true, text: 'Flight Time (minutes)', color: '#94a3b8' },
-              grid: { color: '#334155' },
-              ticks: { color: '#94a3b8' }
+              title: { display: true, text: 'Flight Time (minutes)', color: '#64748b', font: { weight: '500' } },
+              grid: { color: '#f1f5f9' },
+              ticks: { color: '#64748b' }
             },
             yAlt: {
               type: 'linear',
               position: 'left',
-              title: { display: true, text: 'Altitude (ft)', color: '#38bdf8' },
-              grid: { color: '#334155' },
-              ticks: { color: '#94a3b8' }
+              title: { display: true, text: 'Altitude (ft)', color: '#0284c7', font: { weight: '600' } },
+              grid: { color: '#e2e8f0' },
+              ticks: { color: '#64748b' }
             },
             yFlow: {
               type: 'linear',
               position: 'right',
-              title: { display: true, text: 'Oxygen Flow (LPM)', color: '#f43f5e' },
+              title: { display: true, text: 'Oxygen Flow (LPM)', color: '#e11d48', font: { weight: '600' } },
               grid: { drawOnChartArea: false },
-              ticks: { color: '#94a3b8' },
+              ticks: { color: '#64748b' },
               min: 0
             }
           },
           plugins: {
-            legend: { labels: { color: '#f8fafc' } }
+            legend: { 
+              labels: { 
+                color: '#334155',
+                usePointStyle: true,
+                boxWidth: 8
+              } 
+            }
           }
         }
       });
     }
 
-    // Event Listeners
-    document.getElementById('igcFile').addEventListener('change', (e) => {
-      const file = e.target.files[0];
+    function exportToCsv() {
+      if (cachedAltitudes.length === 0) return;
+
+      const targetAlt = document.getElementById('targetAlt').value;
+      let csv = 'Minute,Altitude_ft,Target_Altitude_ft,O2_Flow_LPM\n';
+      for (let i = 0; i < cachedAltitudes.length; i++) {
+        csv += `${i + 1},${cachedAltitudes[i]},${targetAlt},${cachedFlowRates[i]}\n`;
+      }
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'oxygen_flight_profile.csv');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
+    function handleFile(file) {
       if (!file) return;
+      document.getElementById('dropzoneLabel').textContent = file.name;
 
       const reader = new FileReader();
       reader.onload = (event) => {
@@ -403,20 +636,56 @@
         updateCalculations();
       };
       reader.readAsText(file);
+    }
+
+    // Drag and Drop listeners
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('igcFile');
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.classList.add('dragover');
+      }, false);
     });
 
-    document.getElementById('homeAlt').addEventListener('input', updateCalculations);
-    document.getElementById('targetAlt').addEventListener('input', updateCalculations);
-    document.getElementById('minuteVolume').addEventListener('input', updateCalculations);
-    document.getElementById('altSource').addEventListener('change', () => {
-      const fileInput = document.getElementById('igcFile');
-      if (fileInput.files.length > 0) {
-        fileInput.dispatchEvent(new Event('change'));
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.classList.remove('dragover');
+      }, false);
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        fileInput.files = files;
+        handleFile(files[0]);
       }
     });
 
-    // Run initial threshold calculation on page load
-    updateCalculations();
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length > 0) {
+        handleFile(e.target.files[0]);
+      }
+    });
+
+    // Parameter change listeners
+    document.getElementById('targetAlt').addEventListener('input', updateCalculations);
+    document.getElementById('minuteVolume').addEventListener('input', updateCalculations);
+    document.getElementById('altSource').addEventListener('change', () => {
+      if (fileInput.files.length > 0) {
+        handleFile(fileInput.files[0]);
+      }
+    });
+
+    document.getElementById('homeAlt').addEventListener('input', updateAcclimatizationReference);
+    document.getElementById('exportBtn').addEventListener('click', exportToCsv);
+
+    // Initial acclimatization output load
+    updateAcclimatizationReference();
   </script>
 </body>
 </html>
