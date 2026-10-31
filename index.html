@@ -3,384 +3,358 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pilot Oxygen Consumption & Flow Rate Calculator</title>
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Chart.js CDN -->
+  <title>Aviation Oxygen & Acclimatization Calculator</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    .dropzone-active {
-      border-color: #3b82f6 !important;
-      background-color: #eff6ff !important;
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --border: #334155;
+      --primary: #38bdf8;
+      --accent: #10b981;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+    }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 2rem 1rem;
+      display: flex;
+      justify-content: center;
+    }
+    .container {
+      width: 100%;
+      max-width: 960px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+    }
+    h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.75rem;
+    }
+    p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 1.25rem;
+    }
+    label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 0.35rem;
+      font-weight: 500;
+    }
+    input, select {
+      width: 100%;
+      box-sizing: border-box;
+      background: #0f172a;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.6rem 0.75rem;
+      border-radius: 0.375rem;
+      font-size: 0.95rem;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    .callout {
+      margin-top: 1rem;
+      padding: 0.85rem 1rem;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 0.5rem;
+      font-size: 0.9rem;
+      color: #6ee7b7;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+    }
+    .stat-box {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 0.25rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .chart-container {
+      position: relative;
+      height: 380px;
+      margin-top: 1.25rem;
     }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen py-10 px-4">
-  <div class="max-w-4xl mx-auto space-y-6">
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>Pilot Oxygen & Acclimatization Calculator</h1>
+      <p>Upload an IGC flight log to compute minute-by-minute oxygen requirements adjusted for pilot acclimatization elevation.</p>
 
-    <!-- Header -->
-    <header class="text-center space-y-2">
-      <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">
-        Aviation Oxygen Flow Calculator
-      </h1>
-      <p class="text-slate-600 max-w-2xl mx-auto text-sm md:text-base">
-        Upload any flight log (<code class="bg-slate-200 px-1 py-0.5 rounded text-xs">.igc</code>), define your target altitude ceiling, and compute your minute-by-minute $O_2$ requirement.
-      </p>
-    </header>
-
-    <!-- Configuration & Upload Card -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-6">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-        <!-- Target Altitude -->
+      <div class="grid">
         <div>
-          <label for="targetAlt" class="block text-sm font-semibold text-slate-700 mb-1">
-            Target Altitude (ft)
-          </label>
-          <input 
-            type="number" 
-            id="targetAlt" 
-            value="13000" 
-            step="500" 
-            class="w-full rounded-lg border border-slate-300 px-3.5 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-900"
-          >
-          <span class="text-xs text-slate-500">Effective altitude to experience</span>
+          <label for="igcFile">IGC Flight File</label>
+          <input type="file" id="igcFile" accept=".igc,.IGC">
         </div>
-
-        <!-- Minute Volume (Breathing Rate) -->
         <div>
-          <label for="minuteVolume" class="block text-sm font-semibold text-slate-700 mb-1">
-            Breathing Minute Volume (LPM)
-          </label>
-          <input 
-            type="number" 
-            id="minuteVolume" 
-            value="15" 
-            step="1" 
-            class="w-full rounded-lg border border-slate-300 px-3.5 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-900"
-          >
-          <span class="text-xs text-slate-500">Standard seated: ~15 LPM</span>
+          <label for="homeAlt">Home / Acclimatization Alt (ft)</label>
+          <input type="number" id="homeAlt" value="5280" step="500" min="0">
         </div>
-
-        <!-- Altitude Source -->
         <div>
-          <label for="altSource" class="block text-sm font-semibold text-slate-700 mb-1">
-            Altitude Sensor Source
-          </label>
-          <select 
-            id="altSource" 
-            class="w-full rounded-lg border border-slate-300 px-3.5 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white text-slate-900"
-          >
-            <option value="pressure">Pressure Altitude (Barometric)</option>
-            <option value="gps">GNSS / GPS Altitude</option>
+          <label for="targetAlt">Base Equivalent Alt (ft)</label>
+          <input type="number" id="targetAlt" value="12000" step="500">
+        </div>
+        <div>
+          <label for="minuteVolume">Minute Volume (LPM)</label>
+          <input type="number" id="minuteVolume" value="15.0" step="0.5">
+        </div>
+        <div>
+          <label for="altSource">Altitude Source</label>
+          <select id="altSource">
+            <option value="pressure">Pressure Altitude</option>
+            <option value="gps">GPS Altitude</option>
           </select>
-          <span class="text-xs text-slate-500">From IGC B-Records</span>
         </div>
       </div>
 
-      <!-- Drag & Drop Zone -->
-      <div 
-        id="dropZone" 
-        class="border-2 border-dashed border-slate-300 hover:border-blue-400 rounded-xl p-8 text-center cursor-pointer transition-colors duration-150 bg-slate-50"
-      >
-        <input type="file" id="fileInput" accept=".igc,.IGC" class="hidden">
-        <svg class="mx-auto h-10 w-10 text-slate-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-        </svg>
-        <p class="text-sm font-medium text-slate-700">
-          Click to upload or drag and drop your <span class="font-semibold text-blue-600">.IGC flight log</span>
-        </p>
-        <p id="fileNameDisplay" class="text-xs text-slate-500 mt-1">Accepts standard FAI IGC format</p>
+      <div class="callout" id="acclimatizationBanner">
+        Calculating physiological threshold...
       </div>
     </div>
 
-    <!-- Stats Summary Card (hidden until file loaded) -->
-    <div id="resultsCard" class="hidden space-y-6">
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-          <div class="text-xs font-semibold uppercase text-slate-400 tracking-wider">Flight Time</div>
-          <div id="statDuration" class="text-2xl font-bold text-slate-900 mt-1">--</div>
+    <div class="card" id="resultsSection" style="display: none;">
+      <div class="stats">
+        <div class="stat-box">
+          <div class="stat-value" id="maxAlt">0 ft</div>
+          <div class="stat-label">Max Altitude</div>
         </div>
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-          <div class="text-xs font-semibold uppercase text-slate-400 tracking-wider">Max Altitude</div>
-          <div id="statMaxAlt" class="text-2xl font-bold text-slate-900 mt-1">--</div>
+        <div class="stat-box">
+          <div class="stat-value" id="duration">0 min</div>
+          <div class="stat-label">Flight Duration</div>
         </div>
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-          <div class="text-xs font-semibold uppercase text-slate-400 tracking-wider">Peak O₂ Flow</div>
-          <div id="statMaxFlow" class="text-2xl font-bold text-blue-600 mt-1">--</div>
+        <div class="stat-box">
+          <div class="stat-value" id="effectiveTarget">0 ft</div>
+          <div class="stat-label">Acclimatized Ceiling</div>
         </div>
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-          <div class="text-xs font-semibold uppercase text-slate-400 tracking-wider">Total O₂ Needed</div>
-          <div id="statTotalO2" class="text-2xl font-bold text-emerald-600 mt-1">--</div>
+        <div class="stat-box">
+          <div class="stat-value" id="totalO2">0 L</div>
+          <div class="stat-label">Total O2 Needed</div>
         </div>
-      </div>
-
-      <!-- Chart Display -->
-      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
-        <h2 class="text-lg font-bold text-slate-900">Flight Profile & Oxygen Delivery</h2>
-        <div class="relative w-full h-80 md:h-96">
-          <canvas id="flightChart"></canvas>
+        <div class="stat-box">
+          <div class="stat-value" id="avgFlow">0 LPM</div>
+          <div class="stat-label">Avg Flow (Active)</div>
         </div>
       </div>
 
-      <!-- Data Table -->
-      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="p-4 border-b border-slate-100 flex justify-between items-center">
-          <h3 class="font-bold text-slate-800 text-sm">Minute-by-Minute Breakdown</h3>
-          <button 
-            id="exportCsvBtn" 
-            class="text-xs font-semibold text-blue-600 hover:text-blue-800 border border-blue-200 hover:border-blue-300 rounded px-2.5 py-1"
-          >
-            Export CSV
-          </button>
-        </div>
-        <div class="max-h-72 overflow-y-auto">
-          <table class="w-full text-left text-xs text-slate-600">
-            <thead class="bg-slate-50 text-slate-500 uppercase sticky top-0">
-              <tr>
-                <th class="py-2.5 px-4">Flight Minute</th>
-                <th class="py-2.5 px-4">Avg Alt (ft)</th>
-                <th class="py-2.5 px-4">Target (ft)</th>
-                <th class="py-2.5 px-4">Required O₂ (LPM)</th>
-              </tr>
-            </thead>
-            <tbody id="breakdownTbody" class="divide-y divide-slate-100"></tbody>
-          </table>
-        </div>
+      <div class="chart-container">
+        <canvas id="flightChart"></canvas>
       </div>
     </div>
   </div>
 
   <script>
-    // --- Physics & Physiology Engine ---
-    function getPressureMmHg(altFt) {
-      const hMeters = altFt * 0.3048;
+    let flightChart = null;
+    let cachedAltitudes = [];
+
+    // ISA Standard Atmosphere Model: Altitude (ft) -> Pressure (mmHg)
+    function getPressureMmHg(altitudeFt) {
+      const hMeters = altitudeFt * 0.3048;
       const P0 = 760.0;
       return P0 * Math.pow(1 - 2.25577e-5 * hMeters, 5.25588);
     }
 
-    function calculateOxygenFlow(actualAltFt, targetAltFt, minuteVolumeLpm) {
-      if (targetAltFt >= actualAltFt) return 0.0;
-
-      const pActual = getPressureMmHg(actualAltFt);
-      const pTarget = getPressureMmHg(targetAltFt);
-      const ambientO2 = 0.21;
-
-      const requiredFiO2 = ambientO2 * (pTarget / pActual);
-      if (requiredFiO2 > 1.0) {
-        return minuteVolumeLpm; // Saturated at 100% flow if exceeded
-      }
-
-      const o2Flow = minuteVolumeLpm * (requiredFiO2 - ambientO2) / (1.0 - ambientO2);
-      return Math.max(0, parseFloat(o2Flow.toFixed(2)));
+    // Inverse Barometric Model: Pressure (mmHg) -> Altitude (ft)
+    function getAltitudeFt(pressureMmHg) {
+      const P0 = 760.0;
+      const hMeters = (1 - Math.pow(pressureMmHg / P0, 1 / 5.25588)) / 2.25577e-5;
+      return hMeters / 0.3048;
     }
 
-    // --- IGC File Parser ---
-    function parseIGC(content, altSource) {
-      const lines = content.split(/\r?\n/);
+    // Physiological Acclimatization Model (Alveolar Gas Equation)
+    function calculateAcclimatizedThreshold(homeAltFt, baseThresholdFt) {
+      const FIO2 = 0.2095;
+      const PH2O = 47.0; // Water vapor pressure in lungs (mmHg)
+      const R = 0.8;     // Respiratory quotient
+
+      // 1. Critical alveolar PO2 of an unacclimatized sea-level pilot at the base threshold
+      const pAmbBase = getPressureMmHg(baseThresholdFt);
+      const acuteBasePACO2 = 35.0; // Mild hyperventilation at threshold
+      const criticalPAO2 = FIO2 * (pAmbBase - PH2O) - (acuteBasePACO2 / R);
+
+      // 2. Resting PACO2 shifts down ~1.25 mmHg per 1,000 ft of home elevation
+      const homeKft = Math.max(0, homeAltFt / 1000.0);
+      const restingPACO2 = Math.max(24.0, 40.0 - 1.25 * homeKft);
+      const acuteFlightPACO2 = restingPACO2 - 5.0; // Additional hyperventilation in flight
+
+      // 3. Solve for required ambient pressure to match the same critical PAO2
+      const requiredPAmb = ((criticalPAO2 + (acuteFlightPACO2 / R)) / FIO2) + PH2O;
+      const effectiveAlt = getAltitudeFt(requiredPAmb);
+
+      return Math.round(effectiveAlt);
+    }
+
+    // Oxygen flow rate mixing equation
+    function calculateOxygenFlow(actualAltFt, effectiveTargetFt, minuteVolumeLpm) {
+      if (effectiveTargetFt >= actualAltFt) return 0.0;
+
+      const pActual = getPressureMmHg(actualAltFt);
+      const pTarget = getPressureMmHg(effectiveTargetFt);
+      const ambientO2 = 0.21;
+      const requiredFiO2 = ambientO2 * (pTarget / pActual);
+
+      if (requiredFiO2 > 1.0) return minuteVolumeLpm; // FiO2 capped at 100%
+
+      const flow = minuteVolumeLpm * (requiredFiO2 - ambientO2) / (1.0 - ambientO2);
+      return Math.max(0, Math.round(flow * 100) / 100);
+    }
+
+    // Parse B-records from raw IGC text
+    function parseIgcAltitudes(text, altSource) {
+      const lines = text.split('\n');
+      const startIdx = altSource === 'pressure' ? 25 : 30;
+      const endIdx = startIdx + 5;
       const unitMultiplier = 3.28084; // meters to feet
-      const altSlice = altSource === "gps" ? [30, 35] : [25, 30];
 
-      const rawFixes = [];
-
+      const fixes = [];
       for (let line of lines) {
         line = line.trim();
         if (!line.startsWith('B') || line.length < 35) continue;
 
-        const hh = parseInt(line.substring(1, 3), 10);
-        const mm = parseInt(line.substring(3, 5), 10);
-        const ss = parseInt(line.substring(5, 7), 10);
-        const altM = parseInt(line.substring(altSlice[0], altSlice[1]), 10);
+        const hh = parseInt(line.slice(1, 3), 10);
+        const mm = parseInt(line.slice(3, 5), 10);
+        const ss = parseInt(line.slice(5, 7), 10);
+        const altMeters = parseInt(line.slice(startIdx, endIdx), 10);
 
-        if (isNaN(hh) || isNaN(mm) || isNaN(ss) || isNaN(altM)) continue;
+        if (isNaN(hh) || isNaN(altMeters)) continue;
 
-        const tSeconds = hh * 3600 + mm * 60 + ss;
-        rawFixes.push({ t: tSeconds, altFt: altM * unitMultiplier });
+        const totalSec = hh * 3600 + mm * 60 + ss;
+        fixes.push({ t: totalSec, alt: altMeters * unitMultiplier });
       }
 
-      if (rawFixes.length === 0) return [];
+      if (fixes.length === 0) return [];
 
-      // Handle midnight UTC roll-over
-      const adjusted = [];
+      // Handle midnight UTC rollover
       let dayOffset = 0;
-      let prevT = rawFixes[0].t;
-
-      for (let fix of rawFixes) {
-        if (fix.t < prevT - 43200) {
-          dayOffset += 86400;
-        }
-        adjusted.push({ t: fix.t + dayOffset, altFt: fix.altFt });
+      let prevT = fixes[0].t;
+      for (let fix of fixes) {
+        if (fix.t < prevT - 43200) dayOffset += 86400;
+        fix.t += dayOffset;
         prevT = fix.t;
       }
 
-      // Group into minutes relative to flight start
-      const t0 = adjusted[0].t;
-      const minuteBins = {};
-
-      for (let fix of adjusted) {
-        const minuteIdx = Math.floor((fix.t - t0) / 60);
-        if (!minuteBins[minuteIdx]) minuteBins[minuteIdx] = [];
-        minuteBins[minuteIdx].push(fix.altFt);
+      // Group fixes into clock minute bins
+      const minuteGroups = {};
+      for (let fix of fixes) {
+        const minuteKey = Math.floor(fix.t / 60);
+        if (!minuteGroups[minuteKey]) minuteGroups[minuteKey] = [];
+        minuteGroups[minuteKey].push(fix.alt);
       }
 
-      const sortedIndices = Object.keys(minuteBins).map(Number).sort((a, b) => a - b);
-      return sortedIndices.map(idx => {
-        const arr = minuteBins[idx];
-        const avgAlt = arr.reduce((acc, v) => acc + v, 0) / arr.length;
-        return { minute: idx, altFt: Math.round(avgAlt) };
+      const sortedKeys = Object.keys(minuteGroups).map(Number).sort((a, b) => a - b);
+      return sortedKeys.map(k => {
+        const vals = minuteGroups[k];
+        return Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10;
       });
     }
 
-    // --- State and UI Handling ---
-    let currentRawIgc = null;
-    let chartInstance = null;
-    let calculatedResults = [];
+    function updateCalculations() {
+      const homeAlt = parseFloat(document.getElementById('homeAlt').value) || 0;
+      const baseTargetAlt = parseFloat(document.getElementById('targetAlt').value) || 12000;
+      const minuteVolume = parseFloat(document.getElementById('minuteVolume').value) || 15.0;
 
-    const dropZone = document.getElementById('dropZone');
-    const fileInput = document.getElementById('fileInput');
-    const fileNameDisplay = document.getElementById('fileNameDisplay');
-    const targetAltInput = document.getElementById('targetAlt');
-    const minuteVolumeInput = document.getElementById('minuteVolume');
-    const altSourceSelect = document.getElementById('altSource');
-    const exportCsvBtn = document.getElementById('exportCsvBtn');
+      // Calculate acclimatized equivalent altitude
+      const acclimatizedThreshold = calculateAcclimatizedThreshold(homeAlt, baseTargetAlt);
+      const advantage = acclimatizedThreshold - baseTargetAlt;
 
-    dropZone.addEventListener('click', () => fileInput.click());
+      const banner = document.getElementById('acclimatizationBanner');
+      banner.innerHTML = `<strong>Acclimatization Advantage:</strong> A pilot living at <strong>${homeAlt.toLocaleString()} ft</strong> experiences the physiological equivalent of sea-level ${baseTargetAlt.toLocaleString()} ft at <strong>${acclimatizedThreshold.toLocaleString()} ft</strong> (+${advantage.toLocaleString()} ft tolerance).`;
 
-    ['dragenter', 'dragover'].forEach(name => {
-      dropZone.addEventListener(name, (e) => {
-        e.preventDefault();
-        dropZone.classList.add('dropzone-active');
-      });
-    });
+      if (cachedAltitudes.length === 0) return;
 
-    ['dragleave', 'drop'].forEach(name => {
-      dropZone.addEventListener(name, (e) => {
-        e.preventDefault();
-        dropZone.classList.remove('dropzone-active');
-      });
-    });
+      const flowRates = cachedAltitudes.map(alt => calculateOxygenFlow(alt, acclimatizedThreshold, minuteVolume));
 
-    dropZone.addEventListener('drop', (e) => {
-      if (e.dataTransfer.files.length) {
-        handleFile(e.dataTransfer.files[0]);
-      }
-    });
+      const totalLiters = flowRates.reduce((a, b) => a + b, 0);
+      const activeFlows = flowRates.filter(f => f > 0);
+      const avgActiveFlow = activeFlows.length > 0 ? (totalLiters / activeFlows.length) : 0;
+      const peakAltitude = Math.max(...cachedAltitudes);
 
-    fileInput.addEventListener('change', (e) => {
-      if (e.target.files.length) {
-        handleFile(e.target.files[0]);
-      }
-    });
+      document.getElementById('maxAlt').textContent = `${Math.round(peakAltitude).toLocaleString()} ft`;
+      document.getElementById('duration').textContent = `${cachedAltitudes.length} min`;
+      document.getElementById('effectiveTarget').textContent = `${acclimatizedThreshold.toLocaleString()} ft`;
+      document.getElementById('totalO2').textContent = `${Math.round(totalLiters)} L`;
+      document.getElementById('avgFlow').textContent = `${avgActiveFlow.toFixed(2)} LPM`;
+      document.getElementById('resultsSection').style.display = 'block';
 
-    [targetAltInput, minuteVolumeInput, altSourceSelect].forEach(input => {
-      input.addEventListener('input', () => {
-        if (currentRawIgc) processData();
-      });
-    });
-
-    function handleFile(file) {
-      fileNameDisplay.textContent = `Selected: ${file.name}`;
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        currentRawIgc = e.target.result;
-        processData();
-      };
-      reader.readAsText(file);
+      renderChart(cachedAltitudes, flowRates, acclimatizedThreshold);
     }
 
-    function processData() {
-      const targetAlt = parseFloat(targetAltInput.value) || 0;
-      const minuteVolume = parseFloat(minuteVolumeInput.value) || 15;
-      const altSource = altSourceSelect.value;
-
-      const flightMinutes = parseIGC(currentRawIgc, altSource);
-      if (flightMinutes.length === 0) {
-        alert("No valid flight data found in this IGC file.");
-        return;
-      }
-
-      let totalO2 = 0;
-      let maxAlt = 0;
-      let maxFlow = 0;
-
-      calculatedResults = flightMinutes.map(item => {
-        const flow = calculateOxygenFlow(item.altFt, targetAlt, minuteVolume);
-        totalO2 += flow; // 1 minute @ X LPM = X Liters
-        if (item.altFt > maxAlt) maxAlt = item.altFt;
-        if (flow > maxFlow) maxFlow = flow;
-        return { minute: item.minute, altFt: item.altFt, flowO2: flow, targetAlt: targetAlt };
-      });
-
-      // Update Statistics
-      document.getElementById('statDuration').textContent = `${calculatedResults.length} min`;
-      document.getElementById('statMaxAlt').textContent = `${Math.round(maxAlt).toLocaleString()} ft`;
-      document.getElementById('statMaxFlow').textContent = `${maxFlow.toFixed(2)} LPM`;
-      document.getElementById('statTotalO2').textContent = `${Math.round(totalO2).toLocaleString()} L`;
-
-      // Render Table
-      const tbody = document.getElementById('breakdownTbody');
-      tbody.innerHTML = '';
-      calculatedResults.forEach(r => {
-        const tr = document.createElement('tr');
-        tr.className = r.flowO2 > 0 ? "bg-blue-50/40" : "";
-        tr.innerHTML = `
-          <td class="py-1.5 px-4 font-mono">T+${r.minute}m</td>
-          <td class="py-1.5 px-4">${r.altFt.toLocaleString()}</td>
-          <td class="py-1.5 px-4">${r.targetAlt.toLocaleString()}</td>
-          <td class="py-1.5 px-4 font-bold ${r.flowO2 > 0 ? 'text-blue-600' : 'text-slate-400'}">${r.flowO2.toFixed(2)}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-
-      // Render Chart
-      renderChart(calculatedResults);
-
-      document.getElementById('resultsCard').classList.remove('hidden');
-    }
-
-    function renderChart(data) {
-      const labels = data.map(d => `T+${d.minute}m`);
-      const altitudes = data.map(d => d.altFt);
-      const flows = data.map(d => d.flowO2);
-      const targetLine = data.map(d => d.targetAlt);
-
+    function renderChart(altitudes, flowRates, targetThreshold) {
+      const labels = altitudes.map((_, i) => `${i + 1}`);
+      const thresholdLine = altitudes.map(() => targetThreshold);
       const ctx = document.getElementById('flightChart').getContext('2d');
-      if (chartInstance) chartInstance.destroy();
 
-      chartInstance = new Chart(ctx, {
+      if (flightChart) flightChart.destroy();
+
+      flightChart = new Chart(ctx, {
         type: 'line',
         data: {
-          labels: labels,
+          labels,
           datasets: [
             {
-              label: 'Flight Altitude (ft)',
+              label: 'Altitude (ft)',
               data: altitudes,
-              borderColor: '#0284c7',
-              backgroundColor: 'rgba(2, 132, 199, 0.08)',
-              fill: true,
+              borderColor: '#38bdf8',
+              backgroundColor: 'rgba(56, 189, 248, 0.1)',
               yAxisID: 'yAlt',
-              tension: 0.25,
-              pointRadius: 0
+              pointRadius: 0,
+              tension: 0.2
             },
             {
-              label: 'Target Ceiling (ft)',
-              data: targetLine,
-              borderColor: '#94a3b8',
-              borderDash: [6, 6],
-              borderWidth: 1.5,
+              label: 'Acclimatized Threshold (ft)',
+              data: thresholdLine,
+              borderColor: '#10b981',
+              borderDash: [6, 4],
               pointRadius: 0,
               yAxisID: 'yAlt',
               fill: false
             },
             {
-              label: 'O₂ Flow Required (LPM)',
-              data: flows,
-              borderColor: '#10b981',
-              backgroundColor: 'rgba(16, 185, 129, 0.25)',
+              label: 'O2 Flow (LPM)',
+              data: flowRates,
+              borderColor: '#f43f5e',
+              backgroundColor: 'rgba(244, 63, 94, 0.15)',
+              yAxisID: 'yFlow',
               fill: true,
-              yAxisID: 'yO2',
-              tension: 0.15,
-              pointRadius: 0
+              pointRadius: 0,
+              tension: 0.2
             }
           ]
         },
@@ -390,42 +364,59 @@
           interaction: { mode: 'index', intersect: false },
           scales: {
             x: {
-              grid: { display: false },
-              ticks: { maxTicksLimit: 12 }
+              title: { display: true, text: 'Flight Time (minutes)', color: '#94a3b8' },
+              grid: { color: '#334155' },
+              ticks: { color: '#94a3b8' }
             },
             yAlt: {
               type: 'linear',
               position: 'left',
-              title: { display: true, text: 'Altitude (ft)' },
-              grid: { color: '#f1f5f9' }
+              title: { display: true, text: 'Altitude (ft)', color: '#38bdf8' },
+              grid: { color: '#334155' },
+              ticks: { color: '#94a3b8' }
             },
-            yO2: {
+            yFlow: {
               type: 'linear',
               position: 'right',
-              title: { display: true, text: 'O₂ Flow (LPM)' },
-              min: 0,
-              grid: { drawOnChartArea: false }
+              title: { display: true, text: 'Oxygen Flow (LPM)', color: '#f43f5e' },
+              grid: { drawOnChartArea: false },
+              ticks: { color: '#94a3b8' },
+              min: 0
             }
+          },
+          plugins: {
+            legend: { labels: { color: '#f8fafc' } }
           }
         }
       });
     }
 
-    // CSV Export
-    exportCsvBtn.addEventListener('click', () => {
-      if (!calculatedResults.length) return;
-      let csv = "Flight_Minute,Altitude_ft,Target_Alt_ft,Required_O2_LPM\n";
-      calculatedResults.forEach(r => {
-        csv += `${r.minute},${r.altFt},${r.targetAlt},${r.flowO2}\n`;
-      });
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = "oxygen_consumption_schedule.csv";
-      a.click();
-      URL.revokeObjectURL(url);
+    // Event Listeners
+    document.getElementById('igcFile').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const altSource = document.getElementById('altSource').value;
+        cachedAltitudes = parseIgcAltitudes(event.target.result, altSource);
+        updateCalculations();
+      };
+      reader.readAsText(file);
     });
+
+    document.getElementById('homeAlt').addEventListener('input', updateCalculations);
+    document.getElementById('targetAlt').addEventListener('input', updateCalculations);
+    document.getElementById('minuteVolume').addEventListener('input', updateCalculations);
+    document.getElementById('altSource').addEventListener('change', () => {
+      const fileInput = document.getElementById('igcFile');
+      if (fileInput.files.length > 0) {
+        fileInput.dispatchEvent(new Event('change'));
+      }
+    });
+
+    // Run initial threshold calculation on page load
+    updateCalculations();
   </script>
 </body>
 </html>
